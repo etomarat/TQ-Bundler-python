@@ -23,41 +23,48 @@ impl FileType {
         let default_regex = Regex::new(r#"(?m)^include "([a-zA-Z0-9\-_\.]+)"(\n|[\r\n]+)"#).unwrap();
 
         // Regex for `(include "my.module")`
-        let lisp_regex = r#"(?m)^\(include "([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#;
+        let lisp_regex = Regex::new(r#"(?m)^\(include "([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap();
+
+        // Regex for `include("my.module")`
+        let include_paren_regex = Regex::new(r#"(?m)^include\("([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap();
 
         let ext = filename.extension().unwrap().to_str().unwrap();
         let extension = ext.to_string();
         match ext {
             "lua" | "moon" => FileType {
                 extension,
-                regex: default_regex,
+                regex: default_regex.clone(),
                 comment: "--".to_string(),
             },
             "fnl" => FileType {
                 extension,
-                regex: Regex::new(lisp_regex).unwrap(),
+                regex: lisp_regex.clone(),
                 comment: ";;".to_string(),
             },
             "janet" => FileType {
                 extension,
-                regex: Regex::new(lisp_regex).unwrap(),
+                regex: lisp_regex.clone(),
                 comment: "#".to_string(),
             },
             "wren" => FileType {
                 extension,
-                regex: default_regex,
+                regex: default_regex.clone(),
                 comment: "//".to_string(),
             },
             "rb" => FileType {
                 extension,
-                regex: default_regex,
+                regex: default_regex.clone(),
                 comment: "#".to_string(),
             },
-            "nut" | "js" | "py" => FileType {
+            "nut" | "js" => FileType {
                 extension,
-                // Regex for `include("my.module")`
-                regex: Regex::new(r#"(?m)^include\("([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
+                regex: include_paren_regex.clone(),
                 comment: "//".to_string(),
+            },
+            "py" => FileType {
+                extension,
+                regex: include_paren_regex.clone(),
+                comment: "#".to_string(),
             },
             _ => {
                 log(
